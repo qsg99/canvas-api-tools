@@ -1,6 +1,5 @@
-# Run with the course id and assignment id given as command line arguments
-# First, getRoles retrieves all TFs and Enhanced CAs from the course.
-# Then for the assignment, countGraders figures out how many grades were given by each TF/ECA
+# getRoles retrieves all TFs and Enhanced CAs from the course.
+# countGraders figures out how many grades were given by each TF/ECA for given assignment
 
 # import modules
 
