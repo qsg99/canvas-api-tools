@@ -1,5 +1,6 @@
 # getRoles retrieves all TFs and Enhanced CAs from the course.
 # countGraders figures out how many grades were given by each TF/ECA for given assignment
+# outputs Excel File "GradeCounts.xlsx" with names of graders and # graded for each
 
 # import modules
 
