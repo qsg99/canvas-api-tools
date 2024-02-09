@@ -90,7 +90,7 @@ for grader in graders:
 
 df = pd.DataFrame(data=final_data, index=[0])
 df = (df.T)
-df.to_excel('PSet1GradeCounts.xlsx') 
+df.to_excel('GradeCounts.xlsx') 
 print("Done!")
     
 
