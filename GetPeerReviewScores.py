@@ -1,10 +1,9 @@
 # given a rubric, fetches all peer review scores given to desired assignment using that rubric
 
 # import modules
-import json
+
 from pip._vendor import requests
 import pandas as pd
-import pickle
 from xlsxwriter import Workbook
 
 #target filepath and name for output excel file
@@ -18,8 +17,8 @@ course_id = 143616
 assignment_id = 875141
 
 # if your api key is in a text file, put the filepath here
-with open("/Users/georgeqiao/Desktop/ATG/PythonScripts/CanvasAPIKey.txt", 'r') as text:
-    key = text.read()
+#with open("/Users/georgeqiao/Desktop/ATG/PythonScripts/CanvasAPIKey.txt", 'r') as text:
+    #key = text.read()
 
 # headers with token
 token = 'Bearer ' + key #paste api access token here, after the space after the word Bearer
