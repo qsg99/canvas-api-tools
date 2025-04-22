@@ -4,22 +4,28 @@
 import json
 from pip._vendor import requests
 import pandas as pd
+import pickle
 from xlsxwriter import Workbook
+
+#target filepath and name for output excel file
+filepath = "your filename here" #YOUR FILEPATH AND NAME HERE
+filepath = filepath + ".xlsx"
 
 # put the course, rubric, and assignment ids here
 
-rubric_id = #rubric id goes here
-course_id = #course id here
-assignment_id = #assignment id goes here
+rubric_id = 35235
+course_id = 143616
+assignment_id = 875141
+
+# if your api key is in a text file, put the filepath here
+with open("/Users/georgeqiao/Desktop/ATG/PythonScripts/CanvasAPIKey.txt", 'r') as text:
+    key = text.read()
 
 # headers with token
-
-token = 'Bearer ' #paste api access token here, after the space after the word Bearer
+token = 'Bearer ' + key #paste api access token here, after the space after the word Bearer
 headers = {'Authorization': token}
 
-#target filepath and name for output excel file
-filepath = "" #YOUR FILEPATH AND NAME HERE
-filepath = filepath + ".xlsx"
+
 
 # API Call to get information from the rubric, including assessments made with that rubric and associations of that rubric with courses / assignments
 
@@ -68,32 +74,44 @@ while "next" in submissions.links:
 # store the name of the reviewer, the submission id of the work being reviewed, and the score given for each assessment in a list of dictionaries
 clean=[]
 
+# get user json data, then make dict where keys are user id and value is user name
+user_data = []
+course_users = requests.get("https://canvas.harvard.edu/api/v1/courses/%s/users?per_page=100"%course_id, headers = headers)
+user_data.extend(course_users.json())
+while "next" in course_users.links:
+    course_users = requests.get(course_users.links['next']['url'], headers = headers)
+    user_data.extend(course_users.json())
+
+user_dict = {}
+for user in user_data:
+    user_dict[user['id']] = user['name']
+
 for a in assessments:
 
     #initalize dictionary, which will hold reviewer name, reviewee name, and score for each assessment
     dict = {}
 
     # find username of reviewer
-    user = requests.get("https://canvas.harvard.edu/api/v1/users/%s" %a["assessor_id"], headers = headers)
-    data = user.json()
-    dict["reviewer"] = data["name"]
+    if a['assessor_id'] in user_dict:
+        reviewer_name = user_dict[a["assessor_id"]]
+        
+    else:
+        reviewer_name = 'missing'
+
+    dict["reviewer"] = reviewer_name
 
     # find reviewee's submission by matchin the id of the submission with the artifact_id of the rubric assessments
-    found_reviewee = False
+
     for i in range(len(submissions_data)):
         if (submissions_data[i]["id"] == a["artifact_id"]):
-
+            
             #find name of reviewee
-            reviewee = requests.get("https://canvas.harvard.edu/api/v1/courses/%s/users/%s" %(course_id, submissions_data[i]["user_id"]), headers=headers)
-            r_data = reviewee.json()
-            dict["reviewee"] = r_data["name"]
-            found_reviewee = True
+            if submissions_data[i]["user_id"] in user_dict:
+                reviewee_name = user_dict[submissions_data[i]["user_id"]]
+            else:
+                reviewee_name = "missing"
+            dict["reviewee"] = reviewee_name
             break
-
-    # if not found store reviewee name as missing. this can happen, for example, if you want all your students to do 3 peer reviews, but the number of students in the class is not a multiple of 3
-    
-    if not(found_reviewee):
-        dict["reviewee"] = "missing"
     
     dict["score"] = a["score"]
 
