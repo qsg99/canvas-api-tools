@@ -13,7 +13,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 #target filepath and name for output excel file
-filename = "05.30.25Test8" #YOUR FILEPATH AND NAME HERE
+filename = "05.30.25Test8" #YOUR FILE NAME HERE
 filename = filename + ".xlsx"
 
 filepath = os.path.join(script_dir, filename)
