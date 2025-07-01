@@ -13,24 +13,25 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 
 
 #target filepath and name for output excel file
-filename = "05.30.25Test8" #YOUR FILE NAME HERE
+filename = "07.01.25Test1" #YOUR FILEPATH AND NAME HERE
 filename = filename + ".xlsx"
 
 filepath = os.path.join(script_dir, filename)
 
 # put the course, rubric, and assignment ids here
 
-rubric_id = 35235
+rubric_id = 32329
 course_id = 143616
-assignment_id = 875141
+assignment_id = 907485
 
 # if your api key is in a text file, use these lines to read the key from the text file
-#with open("/API_KEY_FILEPATH", 'r') as text:
-    #key = text.read()
+with open("Desktop/ATG/PythonScripts/CanvasAPIKey.txt", 'r') as text:
+    key = text.read()
+    
 
 # headers with token
 #paste api access token here if it is not in a text file
-key = ''
+#key = ''
 token = 'Bearer ' + key 
 headers = {'Authorization': token}
 
@@ -87,6 +88,7 @@ def get_users(course_id, headers):
     # get json data for all users in course
     user_data = []
     course_users = requests.get("https://canvas.harvard.edu/api/v1/courses/%s/users?per_page=100"%course_id, headers = headers)
+
     user_data.extend(course_users.json())
     while "next" in course_users.links:
         course_users = requests.get(course_users.links['next']['url'], headers = headers)
@@ -94,8 +96,9 @@ def get_users(course_id, headers):
 
     #make a dictionary where keys are user id and value is user name
     user_dict = {}
+    
     for user in user_data:
-        user_dict[user['id']] = user['name']
+        user_dict[user['id']] = {'name':user['name'], 'SIS_ID':user['sis_user_id']}
     return user_dict
 
 def get_criteria(course_id, rubric_id, headers):
@@ -138,29 +141,51 @@ for a in assessments:
 
     # find username of reviewer
     if a['assessor_id'] in user_dict:
-        reviewer_name = user_dict[a["assessor_id"]]
+        reviewer_name = user_dict[a["assessor_id"]]['name']
+        reviewer_sis = user_dict[a["assessor_id"]]['SIS_ID']
+
         
     else:
         reviewer_name = 'missing'
+        reviewer_sis ='missing'
+
 
     dict["reviewer"] = reviewer_name
+    dict['reviewer_sis'] = reviewer_sis
     dict['reviewer_id'] = a['assessor_id']
-    # find reviewee's submission by matchin the id of the submission with the artifact_id of the rubric assessments
+    
 
+
+    # find reviewee's submission by matchin the id of the submission with the artifact_id of the rubric assessments
+    submission_found = False
     for i in range(len(submissions_data)):
         if (submissions_data[i]["id"] == a["artifact_id"]):
+            submission_found = True
             match_submission = submissions_data[i] 
+
             #find name of reviewee
             if match_submission["user_id"] in user_dict:
-                reviewee_name = user_dict[match_submission["user_id"]]
+                reviewee_name = user_dict[match_submission["user_id"]]['name']
+                reviewee_sis = user_dict[match_submission["user_id"]]['SIS_ID']
             else:
                 reviewee_name = "missing"
+                reviewee_sis = 'missing'
             dict["reviewee"] = reviewee_name
+            dict['reviewee_sis'] = reviewee_sis
             dict['reviewee_id'] = match_submission["user_id"]
             dict['submission_timestamp'] = match_submission['submitted_at']
             dict['submission_attempt'] = match_submission['attempt']
             dict['submission_state'] = match_submission['workflow_state']
             break
+
+    if submission_found == False:
+        dict["reviewee"] = 'missing'
+        dict['reviewee_sis'] = 'missing'
+        dict['reviewee_id'] = 'missing'
+        
+        dict['submission_timestamp'] = 'missing'
+        dict['submission_attempt'] = 'missing'
+        dict['submission_state'] = 'missing'
     
     
     # for each criterium, get what the reviewer left for that reviewee in that criterium
